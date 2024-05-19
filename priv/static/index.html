@@ -1,22 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tamnoon Sample App</title>
-</head>
-<body>
-    <script>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Tamnoon Sample App</title>
+    </head>
+    <body>
+        <script>
         const wsUrl = "ws://localhost:4000/ws/";
         const socket = new WebSocket(wsUrl);
 
         socket.onopen = function(event) {
             socket.send(JSON.stringify({method: "get", key: "val"}));
-            setTimeout(() => socket.send(JSON.stringify({method: "nudge", key: "val", direction: "up"})), 1000);
+            document.getElementById("inc").onclick = () => socket.send(JSON.stringify({
+                "method": "pub",
+                "channel": "clients",
+                "action": {
+                    "method": "nudge",
+                    "key": "val",
+                    "direction": "up"
+                }
+            }))
+            document.getElementById("dec").onclick = () => socket.send(JSON.stringify({
+                "method": "pub",
+                "channel": "clients",
+                "action": {
+                    "method": "nudge",
+                    "key": "val",
+                    "direction": "down"
+                }
+            }))
         };
 
         socket.onmessage = function(event) {
             const field = JSON.parse(event.data);
+            if ("pub" in field) return;
             if ("val" in field) {
                 document.getElementById("val").innerText = field.val;
             }
@@ -30,6 +48,8 @@
             console.log("WebSocket error:", error);
         };
     </script>
-    <p id="val"></p>
-</body>
+        <p id="val">0</p>
+        <button id="inc">+</button>
+        <button id="dec">-</button>
+    </body>
 </html>
